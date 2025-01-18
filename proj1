@@ -1,0 +1,21 @@
+#include <math.h>
+#include <stdio.h>
+
+
+/**
+* Ask the user for two positive integers.
+* Print all the multiples of the first integer between 1 and the second integer
+*/
+
+int main(void)
+{
+    int spherical_segments = 0;
+
+    while (spherical_segments< 2 && spherical_segments >10) {
+        printf("How many spherical segments you want to evaluate [2-10]? ");
+        scanf("%i", &spherical_segments)
+    }
+
+    
+    return 0;
+}
