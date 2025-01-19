@@ -16,6 +16,14 @@ float average (int a, int b, int c) {
     return avg;
 }
 
+float volume (R, ha, hb) {
+    float volume;
+    float a_value;
+    a_value = (sqrt(R*R - ha*ha))
+    b_value = (sqrt(R*R - hb*hb))
+    volume = ((1/6)*(pi)(ha-hb))(3*(a_value * a_value) + 3*(b_value * b_value) + (ha-hb))
+    return volume;
+}
 
 int main()
 {
@@ -31,9 +39,6 @@ int main()
     }
 
     int boundary = 1;
-    int valid = 1;
-
-// for (int boundary= 1; boundary <= spherical_segments; boundary++) 
     
     while (boundary <= spherical_segments) {
 
@@ -49,6 +54,8 @@ int main()
         printf("Entered data: R = %.2f ha = %.2f hb = %.2f.\n", R, ha, hb);
 
         if ( 0 < R && 0 < ha && 0 < hb && hb<=ha && ha<=R) {
+            current_volume = volume(R, ha, hb)
+            printf("Total Surface Area = 697.43 Volume = %.2f.\n", current_volume)
             boundary ++;
         }
 
@@ -60,7 +67,8 @@ int main()
         }
 
     }
-
+    
+    
     return 0;
 }
 
