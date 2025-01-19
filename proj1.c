@@ -7,31 +7,43 @@
 * Print all the multiples of the first integer between 1 and the second integer
 */
 
+float total_volume;
+float total_surface;
+int spherical_segments = 0;
 
-float const pi = 3.14159265359; 
-
-float average (int a, int b, int c) {
-    float avg;
-    avg = (a + b + c)/3.0;
-    return avg;
+float surface_area(float R, float ha, float hb){
+    float surface_area;
+    float a_value;
+    float b_value;
+    float h_value; 
+    float top_surface;
+    float bottom_surface;
+    float lateral_surface;
+    a_value = (sqrt(R*R - ha*ha));
+    b_value = (sqrt(R*R - hb*hb));
+    h_value = (ha - hb);
+    top_surface = (3.14159265359 * (a_value*a_value));
+    bottom_surface = (3.14159265359 * (b_value*b_value));
+    lateral_surface = 2.0 * 3.14159265359 * R * h_value;
+    surface_area = (top_surface + bottom_surface + lateral_surface);
+    return surface_area;
 }
 
-float volume (R, ha, hb) {
+float volume (float R, float ha, float hb) {
     float volume;
     float a_value;
-    a_value = (sqrt(R*R - ha*ha))
-    b_value = (sqrt(R*R - hb*hb))
-    volume = ((1/6)*(pi)(ha-hb))(3*(a_value * a_value) + 3*(b_value * b_value) + (ha-hb))
+    float b_value;
+    a_value = (sqrt(R*R - ha*ha));
+    b_value = (sqrt(R*R - hb*hb));
+    volume = ((1.0/6.0)* 3.14159265359 *(ha-hb)) * (3.0*(a_value * a_value) + 3.0*(b_value * b_value) + (ha-hb)*(ha-hb));
     return volume;
 }
 
 int main()
 {
-    int spherical_segments = 0;
     float R;
     float ha; 
     float hb;
-
 
     while (spherical_segments < 2 || spherical_segments > 10) {
         printf("How many spherical segments you want to evaluate [2-10]? ");
@@ -54,8 +66,13 @@ int main()
         printf("Entered data: R = %.2f ha = %.2f hb = %.2f.\n", R, ha, hb);
 
         if ( 0 < R && 0 < ha && 0 < hb && hb<=ha && ha<=R) {
-            current_volume = volume(R, ha, hb)
-            printf("Total Surface Area = 697.43 Volume = %.2f.\n", current_volume)
+            float current_volume;
+            float current_surface;
+            current_volume = volume(R, ha, hb);
+            total_volume += current_volume;
+            current_surface = surface_area(R, ha, hb);
+            total_surface += current_surface;
+            printf("Total Surface Area = %.2f Volume = %.2f.\n", current_surface, current_volume);
             boundary ++;
         }
 
@@ -67,8 +84,14 @@ int main()
         }
 
     }
-    
-    
+
+    printf("Total average results:");
+    float average_volume;
+    float average_surface;
+    average_surface = total_surface / spherical_segments;
+    average_volume = total_volume /spherical_segments;
+    printf("Average Surface Area = %.2f  Average Volume = %.2f .\n", average_surface, average_volume);
+
     return 0;
 }
 
