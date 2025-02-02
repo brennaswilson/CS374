@@ -202,22 +202,11 @@ int main ( int argc, char **argv ){
 
     }
 
-    struct movie* current = head;
-    while (current != NULL) {
-        printf("Title: %s\n", current->title);
-        printf("Year: %s\n", current->year);
-        printf("Language: %s\n", current->language);
-        printf("Rating: %s\n", current->rating);
-        printf("\n");
-        current = current->next;
-    }
-
-
     // Free the memory allocated by getline for currLine
     free(currLine);
     // Close the file
     fclose(movieFile);
-    printf("\nProcessed file %s and parsed data for %d movies\n", filePath, total_movies);
+    printf("Processed file %s and parsed data for %d movies\n\n", filePath, total_movies);
     return head;
 }
 
