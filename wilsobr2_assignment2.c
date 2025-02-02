@@ -206,7 +206,7 @@ int main ( int argc, char **argv ){
     free(currLine);
     // Close the file
     fclose(movieFile);
-    printf("Processed file %s and parsed data for %d movies\n\n", filePath, total_movies);
+    printf("Processed file %s and parsed data for %d movies\n\n", filePath, total_movies - 1);
     return head;
 }
 
