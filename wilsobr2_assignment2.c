@@ -76,7 +76,7 @@ int main ( int argc, char **argv ){
                 }
                 current = current->next;
             }
-            if (movies_printed ==0){
+            if (movies_printed == 0){
                 printf("No data about movies released in the year %s\n", year_chosen);
             }
             printf("\n");
@@ -114,7 +114,33 @@ int main ( int argc, char **argv ){
         if (option_chosen == 3){
             printf("Enter the language for which you want to see movies: ");
             scanf("%s", language_chosen);
-        }
+            struct movie* current = head;
+            //skip headers
+            current = current -> next;
+            int movieCounter = 0;
+            
+
+            while(current != NULL){
+                char* movieLanguage = strdup(current -> language);
+                char* current_language = strtok(movieLanguage, ";[]");
+                
+                while(current_language != NULL){
+                    if(strcmp(current_language, language_chosen) == 0){
+                        printf("%s %s\n", current->year, current->title);
+                        movieCounter ++;
+                        break;
+                    }
+                    current_language = strtok(NULL, ";[]");
+                }
+                current = current->next;
+                }
+            if(movieCounter == 0){
+                printf("No data about movies released in %s\n", language_chosen);
+            }
+
+            printf("\n");
+
+            }
 
         if (option_chosen > 4){
             printf("You entered an incorrect choice. Try again.\n\n");
@@ -125,7 +151,6 @@ int main ( int argc, char **argv ){
     return 0;
     return EXIT_SUCCESS;
 }
-
 
 
 /*
