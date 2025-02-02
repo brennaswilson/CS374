@@ -1,59 +1,45 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "movies.h"
+
+int total_movies = 0; 
 
 struct movie{
     char* title;
-    int year;
+    char* year;
     char* language;
-    float rating;
-    struct movie* next;
+    char* rating;
+    struct movie *next;
 
 };
 
-    // struct movie* createMovie(char* title, int* year, char* language, int* rating){
-    //     struct movie* currMovie = malloc(sizeof(struct movie));
-    //     // Allocate memory for the movie title in the structure
-    //     currMovie->title = calloc(strlen(title) + 1, sizeof(char));
-    //     // Copy the value of name into the member name in the structure
-    //     strcpy(currMovie->title, title);
+struct movie* processMovieFile(char* filePath);
 
-    //     // Allocate memory for member year in the structure
-    //     currMovie->year = calloc(1, sizeof(int));
-    //     // Copy the value of year into the member year in the structure
-    //     strcpy(currMovie->year, year);
+struct movie* createMovie(char* title, char* year, char* language, char* rating){
+    struct movie* currMovie = malloc(sizeof(struct movie));
 
-    //     // Allocate memory for member language in the structure
-    //     currMovie->language = calloc(strlen(language) + 1, sizeof(char));
-    //     // Copy the value of year into the member year in the structure
-    //     strcpy(currMovie->language, language);
+    //insert title
+    currMovie->title = calloc(strlen(title) + 1, sizeof(char));
+    strcpy(currMovie->title, title);
 
-    //     // Allocate memory for member year in the structure
-    //     currMovie->rating = calloc(strlen(rating) + 1, sizeof(int));
-    //     // Copy the value of year into the member year in the structure
-    //     strcpy(currMovie->rating, rating);
+    //insert year
+    currMovie->year = calloc(strlen(year) + 1, sizeof(char));
+    strcpy(currMovie->year, year);
 
-    //     // Set the next node to NULL in the newly created customer entry
-    //     currMovie->next = NULL;
-    //     return currMovie;
+    //insert language
+    currMovie->language = calloc(strlen(language) + 1, sizeof(char));
+    strcpy(currMovie->language, language);
 
-    // }
+    //insert rating
+    currMovie->rating = calloc(strlen(rating) + 1, sizeof(char));
+    strcpy(currMovie->rating, rating);  
+    return currMovie;
+
+    
+}
 
 
 int main ( int argc, char **argv ){
-    char title[40];
-    int year;
-    char language[10];
-    int rating;
-
-
-    // The head of the linked list
-    struct movie* head = NULL;
-    // The tail of the linked list
-    struct movie* tail = NULL;
-    //pointer to whole list 
-    struct movie* movies = NULL;
 
     if (argc < 2)
     {
@@ -61,10 +47,11 @@ int main ( int argc, char **argv ){
         printf("Example usage: ./movies movies.csv\n");
         return EXIT_FAILURE;
     }
-    processMovieFile(argv[1]);
-    
+
+    struct movie* head = processMovieFile(argv[1]);
+
     int option_chosen = 0;
-    int year_chosen;
+    char year_chosen[10];
     char language_chosen[86];
 
     while (option_chosen != 4){
@@ -77,7 +64,22 @@ int main ( int argc, char **argv ){
 
         if (option_chosen == 1){
             printf("Enter the year for which you want to see movies: ");
-            scanf("%d", &year_chosen);
+            scanf("%s", year_chosen);
+            struct movie* current = head;
+            int movies_printed = 0;
+
+            //go through linked list and print all movie titles with year that matches 
+              while (current != NULL) {
+                if(strcmp((current->year), year_chosen)==0){
+                    printf("%s\n", current->title);
+                    movies_printed++;
+                }
+                current = current->next;
+            }
+            if (movies_printed ==0){
+                printf("No data about movies released in the year %s\n", year_chosen);
+            }
+            printf("\n");
 
         }
 
@@ -102,17 +104,6 @@ int main ( int argc, char **argv ){
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 /*
  * Function: processMovieFile
  *   Opens a file, reads and prints each line
@@ -121,49 +112,55 @@ int main ( int argc, char **argv ){
  *  This function shows sample code that opens a file, then in a loop reads and prints each line in that file.
  *  You can use this code however you want in your Prog Assignment 2.
  */
- void processMovieFile(char* filePath){
+ struct movie* processMovieFile(char* filePath){
     char *currLine = NULL;
     size_t len = 0;
-    int total_lines = 0;
-    char **data = NULL;
 
     // Open the specified file for reading only
     FILE *movieFile = fopen(filePath, "r");
 
+    // The head of the linked list
+    struct movie* head = NULL;
+    // The tail of the linked list
+    struct movie* tail = NULL;
+
     // Read the file line by line
     while(getline(&currLine, &len, movieFile) != -1)
     {
-        char *current_title;
-        char current_year;
-        char *current_lang;
-        char current_rating;
-        
-        struct movie *currMovie = malloc(sizeof(struct movie) * (total_lines + 1));
 
-        //get title
-        char* token = strtok(currLine, ",");
-        current_title = token;
-        currMovie->title = calloc(strlen(token) + 1, sizeof(char));
-        strcpy(currMovie->title, token);
+        //get title, year, language, and rating
+        char* title = strtok(currLine, ",");
+        char* year = strtok(NULL, ",");
+        char* language = strtok(NULL, ",");
+        char* rating = strtok(NULL, ",");
 
-        //get year
-        token = strtok(NULL, ",");
-        currMovie[total_lines].year = atoi(token);
+        struct movie* newMovie = createMovie(title, year, language, rating);
 
+        if(head == NULL){
+            // This is the first element in the linked link
+            // Set the head and the tail to this element
+            head = newMovie;
+            tail = newMovie;
+        } else{
+        // This is not the first element. 
+        // Add this element to the list and advance the tail
+        tail->next = newMovie;
+        tail = newMovie;
+        }
 
-        //get language
-        token = strtok(NULL, ",");
-        currMovie->language = calloc(strlen(token), sizeof(char));
-        strcpy(currMovie -> language, token);
-
-        //get rating
-        token = strtok(NULL, ",");
-        currMovie[total_lines].rating = atoi(token);
-
-        currMovie-> next = NULL;
-        total_lines ++;
+        total_movies ++;
 
 
+    }
+
+    struct movie* current = head;
+    while (current != NULL) {
+        printf("Title: %s\n", current->title);
+        printf("Year: %s\n", current->year);
+        printf("Language: %s\n", current->language);
+        printf("Rating: %s\n", current->rating);
+        printf("\n");
+        current = current->next;
     }
 
 
@@ -171,7 +168,8 @@ int main ( int argc, char **argv ){
     free(currLine);
     // Close the file
     fclose(movieFile);
-    printf("\nProcessed file %s and parsed data for %d movies\n", filePath, total_lines);
+    printf("\nProcessed file %s and parsed data for %d movies\n", filePath, total_movies);
+    return head;
 }
 
 

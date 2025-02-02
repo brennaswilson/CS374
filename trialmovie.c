@@ -28,7 +28,7 @@ int main() {
 
     // Read the header line (if any)
     fgets(line, sizeof(line), fp);
-
+    
     // Read and parse each line
     while (fgets(line, sizeof(line), fp)) {
         // Allocate memory for a new movie
