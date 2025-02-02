@@ -84,7 +84,31 @@ int main ( int argc, char **argv ){
         }
 
         if (option_chosen == 2){
-            printf("placeholder");
+            
+            struct movie* topMovie = NULL;
+            float maxRating = 0.0;
+
+            //go through linked list and print all movie titles with year that matches 
+            for(int i = 1900; i<2022; i++){
+                struct movie* current = head;
+                topMovie = NULL;
+                maxRating = 0.0;
+                int movie_year;
+                while (current != NULL) {
+                    float current_rating = strtof(current->rating, NULL);
+                    int movie_year = atoi(current->year);
+                    if(movie_year == i && current_rating > maxRating){
+                        maxRating = current_rating;
+                        topMovie = current;
+                    }
+                    current = current->next;  
+                    }
+                if(topMovie != NULL){
+                        printf("%s %.1f %s\n", topMovie->year, maxRating, topMovie->title);
+            }
+             
+            }
+            printf("\n");
         }
 
         if (option_chosen == 3){
