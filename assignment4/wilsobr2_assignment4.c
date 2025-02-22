@@ -8,6 +8,9 @@
  #include <stdbool.h>
  #include <stdlib.h>
  #include <string.h>
+ #include <unistd.h>
+ #include <sys/types.h>
+ #include <sys/wait.h>
  
  #define INPUT_LENGTH 	2048
  #define MAX_ARGS		 512
@@ -35,6 +38,7 @@
  
      // Tokenize the input
      char *token = strtok(input, " \n");
+
      while(token){
          if(!strcmp(token,"<")){
              curr_command->input_file = strdup(strtok(NULL," \n"));
@@ -49,6 +53,7 @@
      }
      return curr_command;
  }
+
  
  int main(int argc, char* argv[])
  {
@@ -56,8 +61,25 @@
  
      while(true)
      {
-         curr_command = parse_input();
- 
+        curr_command = parse_input();
+        
+        if(curr_command && strcmp(curr_command->argv[0], "exit")==0){
+            free(curr_command);
+            printf("\n");
+            exit(EXIT_SUCCESS);
+         }
+        
+
+        if (curr_command && strcmp(curr_command->argv[0], "cd") == 0){
+            
+            if(curr_command -> argc < 2){
+                chdir(getenv("HOME"));
+            }
+            else{
+                chdir(curr_command->argv[1]);
+            }
+
+        }
      }
      return EXIT_SUCCESS;
  }
