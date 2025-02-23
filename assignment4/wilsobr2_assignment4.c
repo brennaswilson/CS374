@@ -18,9 +18,12 @@
  int exit_status = 0;
  int signal_terminated = 0;
 
+<<<<<<< HEAD
  const char *built_in[] = {"cd", "status", "exit", NULL};
  int is_builtin = 0;
 
+=======
+>>>>>>> refs/remotes/origin/main
  struct command_line
  {
      char *argv[MAX_ARGS + 1];
@@ -60,7 +63,11 @@
      return curr_command;
  }
 
+<<<<<<< HEAD
  int non_built_in(struct command_line *curr_command){
+=======
+ void non_built_in(struct command_line *curr_command){
+>>>>>>> refs/remotes/origin/main
 
     pid_t spawnpid = fork();
     int childStatus;
