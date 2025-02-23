@@ -15,7 +15,9 @@
  #define INPUT_LENGTH 	2048
  #define MAX_ARGS		 512
  
- 
+ int exit_status = 0;
+ int signal_terminated = 0;
+
  struct command_line
  {
      char *argv[MAX_ARGS + 1];
@@ -51,9 +53,32 @@
          }
          token=strtok(NULL," \n");
      }
+
      return curr_command;
  }
 
+ void non_built_in(struct command_line *curr_command){
+
+    pid_t spawnpid = fork();
+    int childStatus;
+    int childPid;
+
+    //foreground
+
+    //child process
+    if(spawnpid == 0){
+        
+        if (execvp(curr_command->argv[0], curr_command->argv) == -1){
+            char error_message = ("%d: no such file or directory\n", curr_command->argv[0]);
+            perror(error_message);
+            exit_status = EXIT_FAILURE;
+
+        };
+
+    }
+
+    //background
+ }
  
  int main(int argc, char* argv[])
  {
@@ -63,14 +88,14 @@
      {
         curr_command = parse_input();
         
-        if(curr_command && strcmp(curr_command->argv[0], "exit")==0){
+        if(curr_command && (strcmp(curr_command->argv[0], "exit") == 0 || strcmp(curr_command->argv[0], "&exit") == 0)){
             free(curr_command);
             printf("\n");
             exit(EXIT_SUCCESS);
          }
         
 
-        if (curr_command && strcmp(curr_command->argv[0], "cd") == 0){
+        if (curr_command && (strcmp(curr_command->argv[0], "cd") == 0 || strcmp(curr_command->argv[0], "&cd") == 0)){
             
             if(curr_command -> argc < 2){
                 chdir(getenv("HOME"));
@@ -80,6 +105,23 @@
             }
 
         }
+
+        if (curr_command && (strcmp(curr_command->argv[0], "status") == 0 || strcmp(curr_command->argv[0], "&status") == 0)){
+            if (signal_terminated == 0){
+                printf("exit value %d\n", exit_status);
+                fflush(stdout);
+            }
+            else{
+                printf("terminated by signal %d\n", exit_status);
+                fflush(stdout);
+            }
+        }
+
+        else{
+            non_built_in(curr_command);
+        }
+
+
      }
      return EXIT_SUCCESS;
  }
