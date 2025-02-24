@@ -11,6 +11,7 @@
  #include <unistd.h>
  #include <sys/types.h>
  #include <sys/wait.h>
+ #include <fcntl.h>
  
  #define INPUT_LENGTH 	2048
  #define MAX_ARGS		 512
@@ -75,6 +76,33 @@
 
     //child process
 
+    if (spawnpid == 0) {
+        if(curr_command->input_file != NULL){
+
+            //open file for read only
+            int sourceFD = open(curr_command->input_file, O_RDONLY);
+            if (sourceFD == -1) { 
+                perror(curr_command->input_file); 
+                fflush(stdout);
+                exit_status = 1;
+                exit(1);
+            }
+    
+            // Redirect stdin to source file
+            int result = dup2(sourceFD, 0);
+            if (result == -1) { 
+                perror(curr_command->input_file); 
+                exit_status = 1;
+                close(sourceFD);
+                exit(1);
+            }
+    
+            close(sourceFD);
+    
+        }
+    }
+
+
     switch (spawnpid)
     {
     case -1:
@@ -112,7 +140,9 @@
  int main(int argc, char* argv[])
  {
      struct command_line *curr_command;
- 
+
+     int old_stdin = dup(STDIN_FILENO);
+
      while(true)
      {
         curr_command = parse_input();
@@ -155,6 +185,7 @@
     
             if(is_builtin == 0){
                 exit_status = non_built_in(curr_command);
+
             }
             is_builtin = 0;
         }
@@ -162,6 +193,7 @@
         else{
             continue;
         }
+        dup2(old_stdin, STDIN_FILENO);
 
      }
      return EXIT_SUCCESS;
