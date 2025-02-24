@@ -40,7 +40,12 @@
      printf(": ");
      fflush(stdout);
      fgets(input, INPUT_LENGTH, stdin);
- 
+    
+     if(input == NULL || input[0] == '#' || input[0] == '\n'){
+        free(curr_command);
+        return NULL;
+     }
+
      // Tokenize the input
      char *token = strtok(input, " \n");
 
@@ -112,47 +117,51 @@
      {
         curr_command = parse_input();
         
-        if(curr_command && (strcmp(curr_command->argv[0], "exit") == 0 || strcmp(curr_command->argv[0], "&exit") == 0)){
-            free(curr_command);
-            printf("\n");
-            exit(EXIT_SUCCESS);
-         }
-        
-
-        if (curr_command && (strcmp(curr_command->argv[0], "cd") == 0 || strcmp(curr_command->argv[0], "&cd") == 0)){
+        if(curr_command != NULL){
+            if(curr_command && (strcmp(curr_command->argv[0], "exit") == 0 || strcmp(curr_command->argv[0], "&exit") == 0)){
+                free(curr_command);
+                printf("\n");
+                exit(EXIT_SUCCESS);
+                }
             
-            if(curr_command -> argc < 2){
-                chdir(getenv("HOME"));
+    
+            if (curr_command && (strcmp(curr_command->argv[0], "cd") == 0 || strcmp(curr_command->argv[0], "&cd") == 0)){
+                
+                if(curr_command -> argc < 2){
+                    chdir(getenv("HOME"));
+                }
+                else{
+                    chdir(curr_command->argv[1]);
+                }
+    
             }
-            else{
-                chdir(curr_command->argv[1]);
+    
+            if (curr_command && (strcmp(curr_command->argv[0], "status") == 0 || strcmp(curr_command->argv[0], "&status") == 0)){
+                if( exit_status != 0){
+                    exit_status = 1;
+                }
+                
+                if (signal_terminated == 0){
+                    printf("exit value %d\n", exit_status);
+                    fflush(stdout);
+                }
+                else{
+                    printf("terminated by signal %d\n", exit_status);
+                    fflush(stdout);
+                }
             }
-
+            
+            is_builtin = builtin_check(curr_command);
+    
+            if(is_builtin == 0){
+                exit_status = non_built_in(curr_command);
+            }
+            is_builtin = 0;
         }
 
-        if (curr_command && (strcmp(curr_command->argv[0], "status") == 0 || strcmp(curr_command->argv[0], "&status") == 0)){
-            if( exit_status != 0){
-                exit_status = 1;
-            }
-            
-            if (signal_terminated == 0){
-                printf("exit value %d\n", exit_status);
-                fflush(stdout);
-            }
-            else{
-                printf("terminated by signal %d\n", exit_status);
-                fflush(stdout);
-            }
+        else{
+            continue;
         }
-        
-        is_builtin = builtin_check(curr_command);
-
-        if(is_builtin == 0){
-            exit_status = non_built_in(curr_command);
-            
-        }
-        is_builtin = 0;
-
 
      }
      return EXIT_SUCCESS;
