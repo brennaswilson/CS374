@@ -12,6 +12,7 @@
  #include <sys/types.h>
  #include <sys/wait.h>
  #include <fcntl.h>
+
  
  #define INPUT_LENGTH 	2048
  #define MAX_ARGS		 512
@@ -33,17 +34,39 @@
      bool is_bg;
  };
  
- 
+ // Handler for SIGNINT
+ void handle_SIGINT(int signo){
+    char* message = "terminated by signal 2\n";
+    // We are using write rather than printf
+    write(STDOUT_FILENO, message, 24);
+ }
+
+ void handle_SIGTSTP(int signo){
+    char* message = "Entering foreground-only mode (& is now ignored)\n";
+    // We are using write rather than printf
+    write(STDOUT_FILENO, message, 50);
+    
+ }
+
  struct command_line *parse_input()
  {
      char input[INPUT_LENGTH];
      struct command_line *curr_command = (struct command_line *) calloc(1, sizeof(struct command_line));
- 
+    
      // Get input
      printf(": ");
      fflush(stdout);
      fgets(input, INPUT_LENGTH, stdin);
     
+     struct sigaction SIGINT_action = {0}, SIGTSTP_action = {0}, ignore_action = {0};
+
+     //Ignore SIGINT
+     SIGINT_action.sa_handler = handle_SIGINT;
+     sigfillset(&SIGINT_action.sa_mask);
+     SIGINT_action.sa_flags = 0;
+     ignore_action.sa_handler = SIG_IGN;
+     sigaction(SIGINT, &ignore_action, NULL);
+
      if(input == NULL || input[0] == '#' || input[0] == '\n'){
         free(curr_command);
         return NULL;
@@ -73,10 +96,28 @@
     pid_t spawnpid = fork();
     int childStatus;
 
-
+    struct sigaction SIGINT_action = {0}, SIGTSTP_action = {0}, ignore_action = {0};
     //foreground
     if(curr_command->is_bg != true){
+
+        //SIGINT handler//
+        struct sigaction SIGINT_action = {0}, SIGTSTP_action = {0}, ignore_action = {0};
+        SIGINT_action.sa_handler = handle_SIGINT;
+        sigfillset(&SIGINT_action.sa_mask);
+        // set sigint flag
+        SIGINT_action.sa_flags = 0;
+        sigaction(SIGINT, &SIGINT_action, NULL);
+
+
+        //SIGSTP ignorer//
+        SIGTSTP_action.sa_handler = handle_SIGTSTP;
+        sigfillset(&SIGTSTP_action.sa_mask);
+        SIGTSTP_action.sa_flags = 0;
+        ignore_action.sa_handler = SIG_IGN;
+        sigaction(SIGTSTP, &ignore_action, NULL);
+
         if (spawnpid == 0) {
+        
 
             //foreground
             if(curr_command->input_file != NULL){
@@ -138,6 +179,7 @@
             }
             break;
         default:
+
             // The parent process executes this branch
             // Wait for child's termination
             spawnpid = waitpid(spawnpid, &childStatus, 0);
@@ -149,9 +191,9 @@
     //background
 
     if(curr_command->is_bg == true){
-
+        
         if (spawnpid == 0) {
-
+             signal(SIGINT, SIG_IGN);
             /////if source files not given//////
 
             if(curr_command->input_file == NULL){
@@ -296,6 +338,9 @@
     }
  }
 
+ 
+ 
+
 
  int main(int argc, char* argv[])
  {
@@ -312,6 +357,8 @@
 
         curr_command = parse_input();
         
+        
+
         if(curr_command != NULL){
             if(curr_command && (strcmp(curr_command->argv[0], "exit") == 0 || strcmp(curr_command->argv[0], "&exit") == 0)){
                 free(curr_command);
