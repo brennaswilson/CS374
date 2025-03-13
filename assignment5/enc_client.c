@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
 
   while((characters = fgetc(file)) != EOF){
     if(strchr(allowed_characters, characters) == NULL){
-        fprintf(stderr,"error: input contains bad characters\n"); 
+        fprintf(stderr,"enc_client: input contains bad characters\n"); 
         fclose(file);
         exit(1); 
     }
@@ -102,7 +102,8 @@ int main(int argc, char *argv[]) {
 
   // Connect to server
   if (connect(socketFD, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) < 0){
-    error("CLIENT: ERROR connecting");
+    fprintf(stderr,"Error: could not contact enc_server on port %s\n", argv[3]); 
+    exit(1);
   }
 
   size_t ret = fread(buffer, 1, sizeof(buffer) - 1, file);
