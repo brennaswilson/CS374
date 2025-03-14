@@ -45,9 +45,10 @@ void setupAddressStruct(struct sockaddr_in* address,
 }
 
 int main(int argc, char *argv[]) {
-  int socketFD, charsWritten, charsRead;
+  int socketFD, charsWritten, charsRead, keyWritten;
   struct sockaddr_in serverAddress;
-  char buffer[8000];
+  char text_buffer[8000];
+  char key_buffer[8000];
   
   // Check usage & args
   if (argc < 4) { 
@@ -106,31 +107,47 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-  size_t ret = fread(buffer, 1, sizeof(buffer) - 1, file);
+  // Read text 
+  size_t ret = fread(text_buffer, 1, sizeof(text_buffer) - 1, file);
   // Remove the trailing \n that fgets adds
-  buffer[ret++] = '\0';
+  text_buffer[ret++] = '\0';
+
+  // Read key 
+  size_t key_ret = fread(key_buffer, 1, sizeof(key_buffer) - 1, keyfile);
+  // Remove the trailing \n that fgets adds
+  key_buffer[key_ret++] = '\0';
+
   fclose(file);
   fclose(keyfile);
 
-  // Send message to server
+  // Send text_buffer to server
   // Write to the server
-  charsWritten = send(socketFD, buffer, ret, 0); 
+  charsWritten = send(socketFD, text_buffer, ret, 0); 
   if (charsWritten < 0){
-    error("CLIENT: ERROR writing to socket");
+    error("CLIENT: ERROR writing text to socket");
   }
   if (charsWritten < ret){
     printf("CLIENT: WARNING: Not all data written to socket!\n");
   }
 
+  // Send key_buffer to server
+  // Write to the server
+  keyWritten = send(socketFD, key_buffer, key_ret, 0); 
+  if (charsWritten < 0){
+    error("CLIENT: ERROR writing key to socket");
+  }
+  if (charsWritten < ret){
+    printf("CLIENT: WARNING: Not all key data written to socket!\n");
+  }
   // Get return message from server
-  // Clear out the buffer again for reuse
-  memset(buffer, '\0', sizeof(buffer));
+  // Clear out the text_buffer again for reuse
+  memset(text_buffer, '\0', sizeof(text_buffer));
   // Read data from the socket, leaving \0 at end
-  charsRead = recv(socketFD, buffer, sizeof(buffer), 0); 
+  charsRead = recv(socketFD, text_buffer, sizeof(text_buffer), 0); 
   if (charsRead < 0){
     error("CLIENT: ERROR reading from socket");
   }
-  printf("CLIENT: I received this from the server: \"%s\"\n", buffer);
+  printf("CLIENT: I received this from the server: %s \n", text_buffer);
 
   // Close the socket
   close(socketFD); 
