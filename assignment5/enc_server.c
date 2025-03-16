@@ -29,56 +29,139 @@ void setupAddressStruct(struct sockaddr_in* address,
 
 const char allowed_characters[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ \n";
 
-int key_values[8000];
-int text_values[8000];
+int text_indexes(char message[], int text_values[]){
+  char letter;
+  int len = strlen(message);
+  for(int i = 0; i < len; i++){
+    letter = message[i];
+    char *p = strchr(allowed_characters, letter);
+    text_values[i] = p - allowed_characters;
+  }
 
-void key_indexes(char sent_key[]){
+}
+
+int key_indexes(char sent_key[], int key_values[]){
   char key_letter;
-  for(int i = 0; i < strlen(sent_key); i++){
+  int len = strlen(sent_key);
+  for(int i = 0; i < len; i++){
     key_letter = sent_key[i];
     char *p = strchr(allowed_characters, key_letter);
     key_values[i] = p - allowed_characters;
   }
 }
 
-void text_indexes(char message[]){
-  char letter;
-  for(int i = 0; i < strlen(message); i++){
-    letter = message[i];
-    char *p = strchr(allowed_characters, letter);
-    text_values[i] = p - allowed_characters;
-  }
-}
+void encrypt(int key_values[], int text_values[], char text_buffer[], char encrypted_message[]){
+  int encrypted_indices[strlen(text_buffer)];
+  int modulo_indices[strlen(text_buffer)];
+  int length = strlen(text_buffer);
 
-
-void encrypt(int key_values[], int text_values[], int length_text, char encrypted_message[]){
-  int encrypted_indices[8000];
-  int modulo_indices[8000];
-
-  for(int i = 0; i < length_text; i++){
+  for(int i = 0; i < length; i++){
     int add_textkey = key_values[i] + text_values[i];
     encrypted_indices[i] = add_textkey;
   }
-
-  for(int i = 0; i < length_text; i++){
+  
+  for(int i = 0; i < length; i++){
     int modulo_textkey = encrypted_indices[i] % 27;
     modulo_indices[i]= modulo_textkey;
   }
 
-  for(int i = 0; i < length_text; i++){
+  for(int i = 0; i < length; i++){
     int index = modulo_indices[i];
     encrypted_message[i] = allowed_characters[index];
-
   }
-
-  encrypted_message[length_text] = '\0';
+  encrypted_message[length] = '\0';
 }
 
+
+ char* serve_receive(int socket) {
+  int charsRead;
+  int loopover = 1;
+  size_t bytes_read;
+  size_t bytes_received;
+  int total_received = 0;
+  int message_length;
+
+  // receive total message size 
+  charsRead = recv(socket, &message_length, sizeof(message_length), 0); 
+  // if server did not get anything, exit 
+  if (charsRead < 0) {
+      fprintf(stderr,"ERROR reading from socket\n"); 
+      exit(0);
+  }
+  // printf("Incoming message will be a total of: %d\n", message_length);
+
+
+  char *buffer = malloc(message_length);
+  int total_remaining = message_length;
+
+  // receive message in chunks
+  while (total_received < message_length) {
+
+      // Read up to 4000 bytes at a time from the file, could be less if we are at the end of the file 
+
+      if (total_remaining >= 4000){
+        bytes_read = recv(socket, buffer + total_received, 4000, 0);
+      }
+      else{
+        bytes_read = recv(socket, buffer + total_received, total_remaining, 0);
+      }
+      
+      if (bytes_read < 0 ) {
+        fprintf(stderr,"ERROR reading from socket\n"); 
+        exit(0);
+      }
+
+      total_received += bytes_read;
+      total_remaining -= bytes_read;
+
+      }
+      return buffer; 
+  }
+
+  int serve_send(int socket, char encrypted_message[]) {
+    int charsWritten;
+    size_t bytes_sent;
+    int total_sent = 0;
+    int message_length = strlen(encrypted_message);
+    int total_remaining = message_length;
+    
+    int buffer_size = message_length; 
+    charsWritten = send(socket, &buffer_size, sizeof(buffer_size), 0); 
+
+    // printf("Total size of array being sent: %d\n", message_length);
+
+    // if server did not get anything, exit 
+    if (charsWritten < 0) {
+        fprintf(stderr,"ERROR writing buffer size to socket\n"); 
+        exit(0);
+    }
+
+    while (total_sent < message_length) {
+
+      // Read up to 4000 bytes at a time from the file, could be less if we are at the end of the file 
+
+      if (total_remaining >= 4000){
+        bytes_sent = send(socket, encrypted_message + total_sent, 4000, 0);
+      }
+      else{
+        bytes_sent = send(socket, encrypted_message + total_sent, total_remaining, 0);
+      }
+      
+      if (bytes_sent < 0 ) {
+        fprintf(stderr,"ERROR reading to socket\n"); 
+        exit(0);
+      }
+      total_sent += bytes_sent;
+      total_remaining -= bytes_sent;
+
+      }
+      return 0;
+    }
+  
+
 int main(int argc, char *argv[]){
-  int connectionSocket, charsRead, keyRead;
-  char plaintext_buffer[8000];
-  char encryptkey_buffer[8000];
-  char encrypted_message[8000];
+  int connectionSocket, charsRead, keyRead, message_size, key_size, bytesReceived;
+  char *text_buffer, *key_buffer, *encrypted_message;
   struct sockaddr_in serverAddress, clientAddress;
   socklen_t sizeOfClientInfo = sizeof(clientAddress);
 
@@ -117,41 +200,28 @@ int main(int argc, char *argv[]){
       error("ERROR on accept");
     }
 
-    printf("SERVER: Connected to client running at host %d port %d\n", 
-                          ntohs(clientAddress.sin_addr.s_addr),
-                          ntohs(clientAddress.sin_port));
+    // printf("SERVER: Connected to client running at host %d port %d\n", 
+    //                       ntohs(clientAddress.sin_addr.s_addr),
+    //                       ntohs(clientAddress.sin_port));
 
-    // Get the message from the client and display it
-    memset(plaintext_buffer, '\0', sizeof(plaintext_buffer));
-
-    // Read the client's text from the socket
-    charsRead = recv(connectionSocket, plaintext_buffer, sizeof(plaintext_buffer) - 1, 0); 
-    if (charsRead < 0){
-      error("ERROR reading from socket");
-    }
-    printf("SERVER: I received this from the client: \"%s\"\n", plaintext_buffer);
-
-    // Read the client's key from the socket
-    memset(encryptkey_buffer, '\0', sizeof(encryptkey_buffer));
-    keyRead = recv(connectionSocket, encryptkey_buffer, sizeof(encryptkey_buffer)-1, 0); 
-    if (keyRead < 0){
-      error("ERROR reading from socket");
-    }
-    printf("SERVER: I received this from the client: \"%s\"\n", encryptkey_buffer);
-
-    key_indexes(encryptkey_buffer);
-    text_indexes(plaintext_buffer);
-    int length_text = strlen(plaintext_buffer);
-    encrypt(key_values, text_values, length_text, encrypted_message);
+    text_buffer = serve_receive(connectionSocket);
+    // printf("Buffer is: %s\n", text_buffer);
+    key_buffer = serve_receive(connectionSocket);
+    // printf("Buffer is: %s\n", key_buffer);
     
-    printf("Encrypted message: %s\n", encrypted_message);
+    int text_values[strlen(text_buffer)];
+    int key_values[strlen(key_buffer)];
+    
 
-    // Send a Success message back to the client
-    charsRead = send(connectionSocket, 
-                    encrypted_message, strlen(encrypted_message), 0); 
-    if (charsRead < 0){
-      error("ERROR writing to socket");
-    }
+    text_indexes(text_buffer, text_values);
+    key_indexes(key_buffer, key_values);
+    
+    char encrypted_message[strlen(text_buffer)];
+    encrypt(key_values, text_values, text_buffer, encrypted_message);
+    
+    serve_send(connectionSocket, encrypted_message);
+
+    // printf("The encrypted message is: %s\n", encrypted_message);
     
     // Close the connection socket for this client
     close(connectionSocket); 

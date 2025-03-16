@@ -7,7 +7,7 @@ int randint(){
     int random_index;
     
     
-    random_index = rand() % 26;
+    random_index = rand() % 27;
 
     return random_index;
 
