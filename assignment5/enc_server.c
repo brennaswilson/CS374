@@ -200,10 +200,6 @@ int main(int argc, char *argv[]){
       error("ERROR on accept");
     }
 
-    // printf("SERVER: Connected to client running at host %d port %d\n", 
-    //                       ntohs(clientAddress.sin_addr.s_addr),
-    //                       ntohs(clientAddress.sin_port));
-
     text_buffer = serve_receive(connectionSocket);
     // printf("Buffer is: %s\n", text_buffer);
     key_buffer = serve_receive(connectionSocket);
