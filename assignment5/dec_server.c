@@ -192,8 +192,6 @@ int main(int argc, char *argv[]){
   
   // Accept a connection, blocking if one is not available until one connects
   while(1){
-
-
     // Accept the connection request which creates a connection socket
     connectionSocket = accept(listenSocket, 
                 (struct sockaddr *)&clientAddress, 
@@ -201,11 +199,6 @@ int main(int argc, char *argv[]){
     if (connectionSocket < 0){
       error("ERROR on accept");
     }
-
-    char decrypt_warning[] = "decrypting";
-
-    serve_send(connectionSocket, decrypt_warning);
-
 
     encrypted_buffer = serve_receive(connectionSocket);
     // printf("Buffer is: %s\n", encrypted_buffer);
@@ -222,7 +215,6 @@ int main(int argc, char *argv[]){
     char decrypted_message[strlen(encrypted_buffer)];
     decrypt(key_values, text_values, encrypted_buffer, decrypted_message);
     
-
     serve_send(connectionSocket, decrypted_message);
 
     // printf("The decrypted message is: %s\n", decrypted_message);

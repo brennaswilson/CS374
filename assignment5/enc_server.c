@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -200,27 +201,36 @@ int main(int argc, char *argv[]){
       error("ERROR on accept");
     }
 
-    text_buffer = serve_receive(connectionSocket);
-    // printf("Buffer is: %s\n", text_buffer);
-    key_buffer = serve_receive(connectionSocket);
-    // printf("Buffer is: %s\n", key_buffer);
-    
-    int text_values[strlen(text_buffer)];
-    int key_values[strlen(key_buffer)];
-    
+    pid_t childpid = fork();
+    if (childpid == 0) {
+      text_buffer = serve_receive(connectionSocket);
+      // printf("Buffer is: %s\n", text_buffer);
+      key_buffer = serve_receive(connectionSocket);
+      // printf("Buffer is: %s\n", key_buffer);
+      
+      int text_values[strlen(text_buffer)];
+      int key_values[strlen(key_buffer)];
+      
+  
+      text_indexes(text_buffer, text_values);
+      key_indexes(key_buffer, key_values);
+      
+      char encrypted_message[strlen(text_buffer)];
+      encrypt(key_values, text_values, text_buffer, encrypted_message);
+      
+      serve_send(connectionSocket, encrypted_message);
+  
+      // printf("The encrypted message is: %s\n", encrypted_message);
+      
+      // Close the connection socket for this client
+      close(connectionSocket); 
+      exit(0);
 
-    text_indexes(text_buffer, text_values);
-    key_indexes(key_buffer, key_values);
-    
-    char encrypted_message[strlen(text_buffer)];
-    encrypt(key_values, text_values, text_buffer, encrypted_message);
-    
-    serve_send(connectionSocket, encrypted_message);
+    }
+    else{
+      close(connectionSocket);
+    }
 
-    // printf("The encrypted message is: %s\n", encrypted_message);
-    
-    // Close the connection socket for this client
-    close(connectionSocket); 
   }
   // Close the listening socket
   close(listenSocket); 
