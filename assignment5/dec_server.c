@@ -200,6 +200,18 @@ int main(int argc, char *argv[]){
       error("ERROR on accept");
     }
 
+    // Receive client identifier
+    char client_type[11];
+    recv(connectionSocket, client_type, sizeof(client_type), 0);
+
+    // Validate client and send the server identifier
+    if (strcmp(client_type, "dec_client") == 0) {
+        send(connectionSocket, "dec_server", 10, 0);
+    } else {
+        send(connectionSocket, "x", 1, 0);
+        close(connectionSocket);
+    }
+
     encrypted_buffer = serve_receive(connectionSocket);
     // printf("Buffer is: %s\n", encrypted_buffer);
     key_buffer = serve_receive(connectionSocket);

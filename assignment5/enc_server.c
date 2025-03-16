@@ -201,6 +201,19 @@ int main(int argc, char *argv[]){
       error("ERROR on accept");
     }
 
+    // Receive client identifier
+    char client_type[11];
+    recv(connectionSocket, client_type, sizeof(client_type), 0);
+
+    // Validate client and send the server identifier
+    if (strcmp(client_type, "enc_client") == 0) {
+        send(connectionSocket, "enc_server", 10, 0);
+    } else {
+        send(connectionSocket, "x", 1, 0);
+        close(connectionSocket);
+    }
+
+
     pid_t childpid = fork();
     if (childpid == 0) {
       text_buffer = serve_receive(connectionSocket);

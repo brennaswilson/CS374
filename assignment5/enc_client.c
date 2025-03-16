@@ -197,6 +197,26 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
+  char *client_type = "enc_client";
+  charsWritten = send(socketFD, client_type, strlen(client_type), 0);
+  if (charsWritten < 0) {
+      fprintf(stderr, "ERROR writing to socket\n");
+      exit(2);
+  }
+
+  char server_type[11];
+  charsRead = recv(socketFD, server_type, sizeof(server_type) - 1, 0);
+  if (charsRead < 0) {
+      fprintf(stderr, "ERROR reading from socket\n");
+      exit(2);
+  }
+
+  if (strcmp(server_type, "enc_server") != 0) {
+      fprintf(stderr, "Error: could not contact enc_server on port%s\n", argv[3]);
+      close(socketFD);
+      exit(2);
+  }
+
   // send plaintext 
   serve_send(socketFD, text_file, number_characters);
 
